@@ -85,6 +85,8 @@ class Parser(private val out: OutputStream = System.out) {
 
         var number = 0
         var next = iterator.next()
+
+        // I'm more in favor of throwing an error here, since the number is really just a sign with no value.
         if (next == LF) {
             return 0
         }
@@ -215,19 +217,17 @@ class Parser(private val out: OutputStream = System.out) {
 }
 
 // A label should contain the instructions inside them to make calling them easier
-data class Label(val id: Int, val stringForm: String) {
+data class Label(private val id: Int, val stringForm: String) {
     private val _instructions = mutableListOf<Instruction>()
 
     val instructions: List<Instruction>
         get() = _instructions
 
-    override fun toString(): String {
-        val builder = StringBuilder("label $id:\n")
+    override fun toString() = buildString {
+        append("label $id:\n")
         _instructions.forEach {
-            builder.appendln("\t$it")
+            appendln("\t$it")
         }
-
-        return builder.toString()
     }
 
     fun add(instruction: Instruction) = _instructions.add(instruction)
@@ -272,7 +272,7 @@ sealed class LabeledInstruction(
         stringForm: String
 ) : Instruction(shorthand, stringForm + labelId.toWhitespace()) {
 
-    class MarkLocationInstruction(labelId: Int) : LabeledInstruction(labelId, "$labelId:", "\n  ")
+    internal class MarkLocationInstruction(labelId: Int) : LabeledInstruction(labelId, "$labelId:", "\n  ")
     class CallSubroutineInstruction(labelId: Int) : LabeledInstruction(labelId, "call $labelId", "\n \t")
     class JumpInstruction(labelId: Int) : LabeledInstruction(labelId, "jump $labelId", "\n \n")
     class JumpZeroInstruction(labelId: Int) : LabeledInstruction(labelId, "jumpzero $labelId", "\n\t ")
@@ -281,12 +281,10 @@ sealed class LabeledInstruction(
 
 class ParserException(override val message: String = "Error parsing program.") : Exception(message)
 
-fun Int.toWhitespace(): String {
-    return buildString {
-        val value = this@toWhitespace
-        append(if (value < 0) '\t' else ' ')
-        val asString = Integer.toBinaryString(value)
-        append(asString.replace('1', '\t').replace('0', ' '))
-        append('\n')
-    }
+fun Int.toWhitespace() = buildString {
+    val value = this@toWhitespace
+    append(if (value < 0) '\t' else ' ')
+    val asString = Integer.toBinaryString(value)
+    // Doing appendln doesn't work.
+    append(asString.replace('1', '\t').replace('0', ' ')).append('\n')
 }

@@ -3,9 +3,7 @@ package com.zelkatani
 import com.zelkatani.Instruction.*
 import com.zelkatani.LabeledInstruction.*
 import org.junit.jupiter.api.*
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -95,9 +93,7 @@ internal class MainTest {
 
     @Test
     fun `Test Program Generation`() {
-        val builder = ProgramBuilder(outputStream)
-
-        builder.add {
+        val program = buildProgram(outputStream) {
             numbers(0, 33, 100, 108, 114, 111, 119, 32, 111, 108, 108, 101, 72)
 
             +CallSubroutineInstruction(0)
@@ -115,7 +111,6 @@ internal class MainTest {
             }
         }
 
-        val program = builder.build()
         program.evaluate()
 
         checkOutputStream("Hello world!")
@@ -124,9 +119,7 @@ internal class MainTest {
 
     @Test
     fun `Test Input`() {
-        val builder = ProgramBuilder(outputStream)
-
-        builder.add {
+        val program = buildProgram(outputStream) {
             number(0)
             +ReadCharInstruction()
 
@@ -136,7 +129,6 @@ internal class MainTest {
             +EndProgramInstruction()
         }
 
-        val program = builder.build()
         program.evaluate()
 
         checkOutputStream("Z")
@@ -171,6 +163,63 @@ internal class MainTest {
         val program = parser parse lexed
 
         assertEquals(stringProgram.toVisible(), program.toWhitespace().toVisible())
+    }
+
+    @Test
+    fun `Test Nonexistent Label`() {
+        // We ignore MarkLocationInstruction because it is internal and won't be usable outside the module (exc. Test Module)
+        val labeledInstructions = listOf(CallSubroutineInstruction(0), JumpInstruction(0),
+                JumpZeroInstruction(0), JumpNegativeInstruction(0))
+
+        for (label: LabeledInstruction in labeledInstructions) {
+            val program = buildProgram {
+                +label
+            }
+
+            assertProgramError(program)
+        }
+    }
+
+    @Test
+    fun `Test Empty Stack`() {
+        val program = buildProgram {
+            +DuplicateInstruction()
+        }
+
+        assertProgramError(program)
+    }
+
+    @Test
+    fun `Test Retrieve Nonexistent Address`() {
+        val program = buildProgram {
+            number(10)
+            +RetrieveInstruction()
+        }
+
+        assertProgramError(program)
+    }
+
+    @Test
+    fun `Test Read Number Instruction`() {
+        System.setIn(ByteArrayInputStream("Zoop".toByteArray()))
+
+        val program = buildProgram(outputStream) {
+            number(0)
+            +ReadNumberInstruction()
+
+            number(0)
+            +RetrieveInstruction()
+            +PrintCharInstruction()
+            +EndProgramInstruction()
+        }
+
+        assertProgramError(program)
+    }
+
+    private fun assertProgramError(program: Program) {
+        assertThrows(ProgramError::class.java) {
+            program.evaluate()
+        }
     }
 
     private fun checkOutputStream(expect: String) {

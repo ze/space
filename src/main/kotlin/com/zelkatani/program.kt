@@ -2,6 +2,7 @@ package com.zelkatani
 
 import com.zelkatani.Instruction.*
 import com.zelkatani.LabeledInstruction.*
+import com.zelkatani.ProgramBuilder.InstructionBuilder
 import java.io.File
 import java.io.OutputStream
 import java.util.*
@@ -18,16 +19,26 @@ class Program(
     private val heap = mutableMapOf<Int, Int>()
 
     fun evaluate() {
+        // I'm going to ignore division by zero because the base Java exception is good enough.
         try {
             evaluate(instructions)
         } catch (end: ProgramEnd) {
-            // This is when we receive a `EndProgramInstruction`. Its better off to throw a throwable rather than
-            // exit the program entirely.
+            // This is when we receive a `EndProgramInstruction`.
+            // It's better off to throw a throwable rather than exit the program entirely.
+        } catch (empty: EmptyStackException) {
+            throw ProgramError("Attempted to pop item from stack, but stack was empty.")
+        } catch (nfe: NumberFormatException) {
+            throw ProgramError("Asked for a number but did not receive one.")
         }
     }
 
     private fun evaluate(instrs: List<Instruction>) {
+        // A small helper function to call a label
         fun callLabel(labelId: Int) {
+            if (labelId !in labels) {
+                throw ProgramError("Label with id: $labelId does not exist.")
+            }
+
             evaluate(labels[labelId]!!.instructions)
         }
 
@@ -76,7 +87,8 @@ class Program(
 
                 is RetrieveInstruction -> {
                     val address = stack.pop()
-                    val value = heap[address]
+                    val value = heap[address] ?: throw ProgramError("Address `$address` is not stored in the heap.")
+
                     stack.push(value)
                 }
 
@@ -150,6 +162,13 @@ class Program(
     }
 }
 
+class ProgramError(override val message: String? = "Program error") : Exception(message)
+
+fun buildProgram(out: OutputStream = System.out, block: InstructionBuilder.() -> Unit) = ProgramBuilder(out).let {
+    it.add(block)
+    it.build()
+}
+
 class ProgramBuilder(private val out: OutputStream = System.out) {
     private val instructions = mutableListOf<Instruction>()
     private val labels = mutableMapOf<Int, Label>()
@@ -169,16 +188,11 @@ class ProgramBuilder(private val out: OutputStream = System.out) {
         labels.putAll(instructionBuilder.labels)
     }
 
-    fun clear() {
-        instructions.clear()
-        labels.clear()
-    }
-
     fun exportToFile(path: String): File {
         val file = File(path)
-        if (file.exists())
-
+        if (file.exists()) {
             file.writeText(build().toWhitespace())
+        }
 
         return file
     }
