@@ -51,11 +51,11 @@ If you want to export the generated program to a file, you can choose to either
 write the program contents to a file, or create a `ProgramBuilder` and to file there.
 
 ```kotlin
-    // With the same program from above
-    val wsText = program.toWhitespace()
+// With the same program from above
+val wsText = program.toWhitespace()
 
-    val file = File(path)
-    file.writeText(wsText)
+val file = File(path)
+file.writeText(wsText)
 ```
 
 or
@@ -75,7 +75,7 @@ a more readable program structure. Unless you have some form of syntax
 highlighting for `.ws` files, there is nothing to see. That's why I allowed for any program to be printed in a beautiful, easy to understand way.
 
 ```kotlin
- // Printing the program that outputs "Hello world!"
+// Printing the program that outputs "Hello world!"
 println(program)
 ```
 
