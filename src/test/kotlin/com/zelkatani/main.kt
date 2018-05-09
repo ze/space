@@ -15,8 +15,8 @@ internal class MainTest {
     private val outputStream = ByteArrayOutputStream()
     private val parser = Parser(outputStream)
 
-    init {
-        System.setIn(ByteArrayInputStream("Z".toByteArray()))
+    private fun setInputStream() {
+        System.setIn(ByteArrayInputStream("Zak".toByteArray()))
     }
 
     @BeforeEach
@@ -119,6 +119,8 @@ internal class MainTest {
 
     @Test
     fun `Test Input`() {
+        setInputStream()
+
         val program = buildProgram(outputStream) {
             number(0)
             +ReadCharInstruction()
@@ -136,28 +138,28 @@ internal class MainTest {
 
     @Test
     fun `Test Program to Whitespace`() {
-        val stringProgram = "    \n" + // push 0
-                "   \t    \t\n" + // push 33
-                "   \t\t  \t  \n" + // push 100
-                "   \t\t \t\t  \n" + // push 108
-                "   \t\t\t  \t \n" + // push 114
-                "   \t\t \t\t\t\t\n" + // push 111
-                "   \t\t\t \t\t\t\n" + // push 119
-                "   \t     \n" + // push 32
-                "   \t\t \t\t\t\t\n" + // push 111
-                "   \t\t \t\t  \n" + // push 108
-                "   \t\t \t\t  \n" + // push 108
-                "   \t\t  \t \t\n" + // push 101
-                "   \t  \t   \n" + // push 72
-                "\n \t  \n" + // call label 0
-                "\n    \n" + // define label 0
-                " \n " + // duplicate
-                "\n\t  \t\n" + // if zero jump to label 1
-                "\t\n  " + // print char
-                "\n \t  \n" + // jump to label 0
-                "\n   \t\n" + // define label 1
-                " \n\n" + // discard
-                "\n\n\n" // end program
+        val stringProgram = "    \n" +  // push 0
+                "   \t    \t\n" +       // push 33
+                "   \t\t  \t  \n" +     // push 100
+                "   \t\t \t\t  \n" +    // push 108
+                "   \t\t\t  \t \n" +    // push 114
+                "   \t\t \t\t\t\t\n" +  // push 111
+                "   \t\t\t \t\t\t\n" +  // push 119
+                "   \t     \n" +        // push 32
+                "   \t\t \t\t\t\t\n" +  // push 111
+                "   \t\t \t\t  \n" +    // push 108
+                "   \t\t \t\t  \n" +    // push 108
+                "   \t\t  \t \t\n" +    // push 101
+                "   \t  \t   \n" +      // push 72
+                "\n \t  \n" +   // call label 0
+                "\n    \n" +    // define label 0
+                " \n " +        // duplicate
+                "\n\t  \t\n" +  // if zero jump to label 1
+                "\t\n  " +      // print char
+                "\n \t  \n" +   // jump to label 0
+                "\n   \t\n" +   // define label 1
+                " \n\n" +   // discard
+                "\n\n\n"    // end program
 
         val lexed = lexer lex stringProgram
         val program = parser parse lexed
@@ -201,7 +203,7 @@ internal class MainTest {
 
     @Test
     fun `Test Read Number Instruction`() {
-        System.setIn(ByteArrayInputStream("Zoop".toByteArray()))
+        setInputStream()
 
         val program = buildProgram(outputStream) {
             number(0)

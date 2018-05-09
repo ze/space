@@ -134,29 +134,25 @@ class Program(
 
     private class ProgramEnd : Throwable()
 
-    override fun toString(): String {
-        return buildString {
-            instructions.forEach {
-                appendln(it)
-            }
+    override fun toString() = buildString {
+        instructions.forEach {
+            appendln(it)
+        }
 
-            labels.values.forEach {
-                appendln(it)
-            }
+        labels.values.forEach {
+            appendln(it)
         }
     }
 
-    fun toWhitespace(): String {
-        return buildString {
-            instructions.forEach {
-                append(it.stringForm)
-            }
+    fun toWhitespace() = buildString {
+        instructions.forEach {
+            append(it.stringForm)
+        }
 
-            labels.values.forEach {
+        labels.values.forEach {
+            append(it.stringForm)
+            it.instructions.forEach {
                 append(it.stringForm)
-                it.instructions.forEach {
-                    append(it.stringForm)
-                }
             }
         }
     }
